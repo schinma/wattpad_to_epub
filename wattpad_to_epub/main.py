@@ -52,7 +52,7 @@ def make_chapter(client: httpx.Client, part: Dict[str, Any], index: int) -> epub
 
 
 @app.command()
-def get_story(url: str):
+def get_story(url: str) -> None:
 
     story_id = get_id_from_url(url)
 
@@ -62,7 +62,7 @@ def get_story(url: str):
     client.headers["user-agent"] = "Mozilla/5.0"
 
     story_id, story_slug = get_id_from_url(url)
-    response = client.get(f"{URL_STORY_API}/202594806")
+    response = client.get(f"{URL_STORY_API}/{story_id}")
     story_info = response.json()
     parts = story_info["parts"]
 
@@ -85,7 +85,7 @@ def get_story(url: str):
 
     chapters = []
 
-    for index, part in enumerate(parts[:2]):
+    for index, part in enumerate(parts):
         chapter = make_chapter(client, part, index)
         chapter.add_item(style_doc)
         chapters.append(chapter)
