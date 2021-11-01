@@ -29,7 +29,8 @@ def make_chapter(client: httpx.Client, part: Dict[str, Any], index: int) -> epub
     logger.info(f"Downloading chapter {index}: {chapter.title} from {part['url']}...")
     soup = BeautifulSoup(client.get(part["url"]))
 
-    text = soup.find("pre")
+    text = soup.pre
+    text.name = "div"
     if text is None:
         logger.error(f"Could not fin content for chapter {chapter.title}")
         raise typer.exit()
@@ -46,6 +47,7 @@ def make_chapter(client: httpx.Client, part: Dict[str, Any], index: int) -> epub
         </html>
     """
     )
+    chapter_content.body.append(title_tag)
     chapter_content.body.append(text)
     chapter.set_content(str(chapter_content))
     return chapter
