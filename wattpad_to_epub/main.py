@@ -67,6 +67,7 @@ def get_story(url: str) -> None:
     response = client.get(f"{URL_STORY_API}/{story_id}")
     story_info = response.json()
     parts = story_info["parts"]
+    cover = client.get(story_info["cover"]).content
 
     # Making the Epub file
     epub_book = epub.EpubBook()
@@ -78,6 +79,8 @@ def get_story(url: str) -> None:
     epub_book.add_metadata("DC", "description", story_info["description"])
     epub_book.add_metadata("DC", "publisher", "Wattpad")
     epub_book.add_metadata("DC", "source", url)
+
+    epub_book.set_cover("cover_image.jpg", cover)
 
     with open(STYLE_FILE_PATH) as css_file:
         style_doc = epub.EpubItem(
@@ -103,6 +106,7 @@ def get_story(url: str) -> None:
     epub_book.spine = [nav_page] + chapters
 
     epub.write_epub(f"{story_slug}.epub", epub_book)
+    client.close()
 
 
 if __name__ == "__main__":
