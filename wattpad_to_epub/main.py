@@ -109,5 +109,5 @@ def get_story(url: str) -> None:
     client.close()
 
 
-if __name__ == "__main__":
+def main():
     app()
