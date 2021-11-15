@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "wattpad_to_epub"
 version = "0.1.0"
-description = ""
+description = "CLI that converts wattpad stories to epub files"
 authors = ["Marie <schindler.marie@gmail.com>"]
 
 [tool.poetry.dependencies]
