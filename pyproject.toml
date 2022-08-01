@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "wattpad_to_epub"
 version = "0.1.0"
-description = ""
+description = "CLI that converts wattpad stories to epub files"
 authors = ["Marie <schindler.marie@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -16,6 +16,8 @@ loguru = "^0.5.3"
 [tool.poetry.dev-dependencies]
 black = "isort"
 isort = "^5.9.3"
+pytest = "^7.1.2"
+flake8 = "^5.0.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -23,3 +25,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 wte = "wattpad_to_epub.main:main"
+
+[tool.isort]
+profile = 'black'
+line_length = 120
