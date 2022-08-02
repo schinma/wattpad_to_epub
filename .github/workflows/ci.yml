@@ -21,6 +21,6 @@ jobs:
     - name: install dependencies
       run: poetry install --no-interaction --no-root
     - name:
-      run: poetry flake8 wattpad_to_epub/ tests/
+      run: poetry run flake8 wattpad_to_epub/ tests/
     - name: run unit-tests
       run: poetry run pytest
