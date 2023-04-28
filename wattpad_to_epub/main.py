@@ -1,6 +1,10 @@
 import asyncio
+import http
 import re
+from abc import ABC, abstractmethod
+from enum import Enum
 from pathlib import Path
+from pydoc import source_synopsis
 from typing import Any, Dict, Tuple
 
 import httpx
@@ -8,19 +12,19 @@ import typer
 from bs4 import BeautifulSoup
 from ebooklib import epub
 from loguru import logger
+from regex import P
 
-app = typer.Typer()
+from wattpad_to_epub.scrappers import ChrysentemumScrapper, WattpadScrapper
 
-URL_STORY_API = "https://www.wattpad.com/api/v3/stories"
+
+class WebSite(Enum):
+    WATTPAD = "WP"
+    CHRYSENTEMUM = "CG"
+
+
 STYLE_FILE_PATH = Path(__file__).resolve().parent / "style.css"
 
-
-def get_id_from_url(url: str) -> Tuple[str, str]:
-    match = re.match(r"^https://www.wattpad.com/story/(?P<id>\d+)-(?P<slug>.+)$", url)
-    if match is None:
-        logger.error(f"Cannot get information from URL {url}")
-        raise typer.Exit()
-    return match.group("id", "slug")
+app = typer.Typer()
 
 
 async def create_chapter(client: httpx.Client, part: Dict[str, Any], index: int) -> epub.EpubHtml:
@@ -57,33 +61,44 @@ async def create_chapter(client: httpx.Client, part: Dict[str, Any], index: int)
 
 @app.command()
 def get_story(url: str) -> None:
-    async def create_story(url: str):
-        story_id = get_id_from_url(url)
+    async def create_story(url: str, web_site: WebSite = typer.Option(...)):
+
+        match (web_site):
+            case WebSite.WATTPAD:
+                scrapper = WattpadScrapper(url)
+            case WebSite.CHRYSENTEMUM:
+                scrapper = ChrysentemumScrapper(url)
 
         # Download story infos with the API
         async with httpx.AsyncClient() as client:
-            # change the user-agent header because wattpad blocks otherwise
-            client.headers["user-agent"] = "Mozilla/5.0"
 
-            story_id, story_slug = get_id_from_url(url)
-            response = await client.get(f"{URL_STORY_API}/{story_id}")
-            story_info = response.json()
-            parts = story_info["parts"]
-            cover = await client.get(story_info["cover"])
-            cover = cover
+            title = scrapper.get_title()
+            cover_content = scrapper.get_book_cover_content()
+            language = scrapper.get_language()
+            author = scrapper.get_author()
+            story_id = scrapper.get_id()
+            try:
+                story_slug = scrapper.slug
+            except AttributeError:
+                story_slug = story_id
+
+            parts = scrapper.get_chapters()
 
             # Making the Epub file
             epub_book = epub.EpubBook()
             epub_book.set_identifier(f"fanfiction-{story_id}")
-            epub_book.set_title(story_info["title"])
-            epub_book.set_language(story_info["language"]["name"])
+            epub_book.set_title(title)
+            epub_book.set_language(language)
 
-            epub_book.add_author(story_info["user"]["name"])
-            epub_book.add_metadata("DC", "description", story_info["description"])
+            epub_book.add_author(author)
+            epub_book.add_metadata(
+                "DC",
+                "description",
+            )
             epub_book.add_metadata("DC", "publisher", "Wattpad")
             epub_book.add_metadata("DC", "source", url)
 
-            epub_book.set_cover("cover_image.jpg", cover.content)
+            epub_book.set_cover("cover_image.jpg", cover_content)
 
             with open(STYLE_FILE_PATH) as css_file:
                 style_doc = epub.EpubItem(

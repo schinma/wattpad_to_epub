@@ -14,8 +14,6 @@ EbookLib = "^0.17.1"
 loguru = "^0.5.3"
 
 [tool.poetry.dev-dependencies]
-black = "isort"
-isort = "^5.9.3"
 pytest = "^7.1.2"
 flake8 = "^5.0.2"
 
