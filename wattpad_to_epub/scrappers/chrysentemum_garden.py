@@ -11,7 +11,7 @@ from wattpad_to_epub.scrappers.base import StoryScrapperBase
 class ChrysentemumScrapper(StoryScrapperBase):
     def __init__(self, url):
         super().__init__(url)
-        self.soup = BeautifulSoup(httpx.get(self.url))
+        self.soup = BeautifulSoup(httpx.get(self.url), features="lxml")
 
     def get_id(self):
         match = re.match(r"^https://chrysanthemumgarden.com/novel-tl/(?P<id>\w+)/$", self.url)
@@ -42,3 +42,10 @@ class ChrysentemumScrapper(StoryScrapperBase):
         """Return the list of chapters"""
         chapters = self.soup.find("div", class_="translated-chapters").find_all("div", class_="chapter-item")
         return [{"title": chap.a.text.strip(), "url": chap.a["href"]} for chap in chapters]
+
+    def get_publisher(self) -> str:
+        return "Chrysenthemum Garden"
+
+    def get_chapter_content(self, chapter_soup: BeautifulSoup):
+        content = chapter_soup.find("div", {"id": "novel-content"})
+        return content

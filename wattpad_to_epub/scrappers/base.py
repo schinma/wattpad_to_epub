@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from bs4 import BeautifulSoup
+
 
 class StoryScrapperBase(ABC):
     def __init__(self, url):
@@ -30,5 +32,9 @@ class StoryScrapperBase(ABC):
         pass
 
     @abstractmethod
-    def get_language():
+    def get_language(self):
+        pass
+
+    @abstractmethod
+    def get_chapter_content(self, chapter_soup: BeautifulSoup):
         pass

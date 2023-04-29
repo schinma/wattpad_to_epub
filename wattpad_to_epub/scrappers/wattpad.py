@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 from wattpad_to_epub.scrappers.base import StoryScrapperBase
+from ebooklib.epub import EpubHtml
 
 
 class WattpadScrapper(StoryScrapperBase):
@@ -40,3 +41,14 @@ class WattpadScrapper(StoryScrapperBase):
 
     def get_description(self):
         return self.story_info["description"]
+
+    def get_publisher(self):
+        return "Wattpad"
+
+    def get_chapter_content(self, chapter_soup: BeautifulSoup):
+        text = chapter_soup.pre
+        text.name = "div"
+        if text is None:
+            logger.error(f"Could not fin content for chapter")
+            raise typer.exit()
+        return text
