@@ -8,7 +8,7 @@ from loguru import logger
 from wattpad_to_epub.scrappers.base import StoryScrapperBase
 
 
-class ChrysentemumScrapper(StoryScrapperBase):
+class FlowerScrapper(StoryScrapperBase):
     def __init__(self, url):
         super().__init__(url)
         self.soup = BeautifulSoup(httpx.get(self.url), features="lxml")

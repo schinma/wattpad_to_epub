@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from pydoc import source_synopsis
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 import typer
@@ -14,13 +14,14 @@ from ebooklib import epub
 from loguru import logger
 from regex import P
 
-from wattpad_to_epub.scrappers import ChrysentemumScrapper, WattpadScrapper
+from wattpad_to_epub.scrappers import FlowerScrapper, WattpadScrapper, FoxScrapper
 from wattpad_to_epub.scrappers.base import StoryScrapperBase
 
 
 class WebSite(Enum):
     WATTPAD = "WP"
     CHRYSENTEMUM = "CG"
+    FOXAHOLIC = "FH"
 
 
 STYLE_FILE_PATH = Path(__file__).resolve().parent / "style.css"
@@ -125,19 +126,21 @@ async def create_ebook(scrapper: StoryScrapperBase):
 
 
 @app.command()
-def get_story(url: str, web_site: WebSite, output: str = typer.Option(...)) -> None:
+def get_story(url: str, web_site: WebSite, output: Optional[str] = typer.Option(default=None)) -> None:
     async def create_story(url: str, website):
 
         match (website):
             case WebSite.WATTPAD:
                 scrapper = WattpadScrapper(url)
             case WebSite.CHRYSENTEMUM:
-                scrapper = ChrysentemumScrapper(url)
+                scrapper = FlowerScrapper(url)
+            case WebSite.FOXAHOLIC:
+                scrapper = FoxScrapper(url)
 
         epub_book = await create_ebook(scrapper)
 
         # Write epub file
-        epub.write_epub(f"{output}.epub", epub_book)
+        epub.write_epub(f"{output if output else scrapper.get_id()}.epub", epub_book)
 
     asyncio.run(create_story(url, web_site))
 

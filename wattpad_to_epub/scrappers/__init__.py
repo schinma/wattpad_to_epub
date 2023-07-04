@@ -1,2 +1,3 @@
-from .chrysentemum_garden import ChrysentemumScrapper
+from .chrysentemum_garden import FlowerScrapper
 from .wattpad import WattpadScrapper
+from .foxaholic import FoxScrapper
