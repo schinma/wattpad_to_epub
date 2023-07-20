@@ -1,27 +1,26 @@
 import asyncio
-import http
-import re
-from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
-from pydoc import source_synopsis
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 
 import httpx
 import typer
+
+from aiodecorators import Semaphore
 from bs4 import BeautifulSoup
 from ebooklib import epub
 from loguru import logger
-from regex import P
 
 from wattpad_to_epub.scrappers import FlowerScrapper, WattpadScrapper, FoxScrapper
 from wattpad_to_epub.scrappers.base import StoryScrapperBase
+from wattpad_to_epub.scrappers.specific_blog2 import BlogScrapper2
 
 
 class WebSite(Enum):
     WATTPAD = "WP"
     CHRYSENTEMUM = "CG"
     FOXAHOLIC = "FH"
+    BLOG = "B"
 
 
 STYLE_FILE_PATH = Path(__file__).resolve().parent / "style.css"
@@ -29,6 +28,7 @@ STYLE_FILE_PATH = Path(__file__).resolve().parent / "style.css"
 app = typer.Typer()
 
 
+@Semaphore(20)
 async def create_chapter(
     client: httpx.Client, part: Dict[str, Any], index: int, scrapper: StoryScrapperBase
 ) -> epub.EpubHtml:
@@ -36,7 +36,7 @@ async def create_chapter(
     chapter = epub.EpubHtml(title=part["title"], file_name=f"chapter_{index}.xhtml", lang="eng")
 
     logger.info(f"Downloading chapter {index}: {chapter.title} from {part['url']}...")
-    soup = BeautifulSoup(await client.get(part["url"]), features="lxml")
+    soup = BeautifulSoup(await client.get(part["url"], headers={"user-agent": "Mozilla/5.0"}), features="lxml")
 
     text = scrapper.get_chapter_content(soup)
 
@@ -47,7 +47,7 @@ async def create_chapter(
         f"""
         <html>
             <head>
-                <title>{chapter.title}</title>
+                <title>Chapter {index}: {chapter.title}</title>
                 <link rel="stylesheet" type="text/css" href="style/main.css" />
             </head>
         <body></body>
@@ -136,11 +136,15 @@ def get_story(url: str, web_site: WebSite, output: Optional[str] = typer.Option(
                 scrapper = FlowerScrapper(url)
             case WebSite.FOXAHOLIC:
                 scrapper = FoxScrapper(url)
+            case WebSite.BLOG:
+                scrapper = BlogScrapper2(url)
 
         epub_book = await create_ebook(scrapper)
 
         # Write epub file
-        epub.write_epub(f"{output if output else scrapper.get_id()}.epub", epub_book)
+        file_name = f"{output if output else scrapper.get_id()}.epub"
+        logger.info(f"Writting EPUB file {file_name}")
+        epub.write_epub(file_name, epub_book)
 
     asyncio.run(create_story(url, web_site))
 

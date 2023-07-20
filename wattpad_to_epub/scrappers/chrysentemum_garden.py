@@ -47,5 +47,73 @@ class FlowerScrapper(StoryScrapperBase):
         return "Chrysenthemum Garden"
 
     def get_chapter_content(self, chapter_soup: BeautifulSoup):
+        translate_dict = {
+            "A": "J",
+            "B": "*",
+            "C": "A",
+            "D": "B",
+            "E": "*",
+            "F": "*",
+            "G": "*",
+            "H": "*",
+            "I": "*",
+            "J": "C",
+            "K": "T",
+            "L": "H",
+            "M": "*",
+            "N": "*",
+            "O": "L",
+            "P": "I",
+            "Q": "W",
+            "R": "N",
+            "S": "*",
+            "T": "Y",
+            "U": "*",
+            "Y": "O",
+            "V": "S",
+            "W": "X",
+            "X": "*",
+            "Y": "*",
+            "Z": "*",
+            "a": "t",
+            "b": "o",
+            "c": "n",
+            "d": "q",
+            "e": "u",
+            "f": "e",
+            "g": "r",
+            "h": "z",
+            "i": "l",
+            "j": "a",
+            "k": "w",
+            "l": "i",
+            "m": "c",
+            "n": "v",
+            "o": "f",
+            "p": "j",
+            "q": "p",
+            "r": "s",
+            "s": "y",
+            "t": "h",
+            "u": "g",
+            "v": "d",
+            "w": "m",
+            "x": "k",
+            "y": "b",
+            "z": "x",
+        }
         content = chapter_soup.find("div", {"id": "novel-content"})
+        for span in content.find_all("span", class_="jum"):
+            new_text = span.string.translate(str.maketrans(translate_dict))
+            span.string = new_text
+            span.unwrap()
+        for p in content.find_all("p"):
+            if p.span:
+                p.span.unwrap()
+        for span in content.find_all("span"):
+            span.decompose()
+        for div in content.find_all("div"):
+            div.decompose()
+        for p in content.find_all("p", {"style": "height:1px;width:0;overflow:hidden;display:inline-block"}):
+            p.decompose()
         return content

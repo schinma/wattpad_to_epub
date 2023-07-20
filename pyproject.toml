@@ -12,6 +12,9 @@ httpx = "^0.20.0"
 beautifulsoup4 = "^4.10.0"
 EbookLib = "^0.17.1"
 loguru = "^0.5.3"
+undetected-chromedriver = "^3.5.0"
+selenium = "^4.10.0"
+aiodecorators = "^0.2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
